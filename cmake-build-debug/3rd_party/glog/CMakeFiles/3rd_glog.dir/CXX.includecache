@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../3rd_party/glog/logging.h
+android/log.h
+-
+algorithm
+-
+ctime
+-
+fstream
+-
+iostream
+-
+set
+-
+sstream
+-
+string
+-
+vector
+-
+
+/Users/michieldejong/Documents/GEOMATICS/GEO1016/A1_Calibration_Code/geo1016/3rd_party/glog/logging.cc
+glog/logging.h
+/Users/michieldejong/Documents/GEOMATICS/GEO1016/A1_Calibration_Code/geo1016/3rd_party/glog/glog/logging.h
+
