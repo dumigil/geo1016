@@ -58,6 +58,12 @@ bool CameraCalibration::calibration(
     std::cout << "TODO: After implementing the calibration() function, I will disable all unrelated output ...\n\n";
 
     // TODO: check if input is valid (e.g., number of correspondences >= 6, sizes of 2D/3D points must match)
+    if (points_2d.size()<6 || points_3d.size()<6){
+        std::cout<<"Invalid Input, less than 6 correspondences"<<std::endl;
+    }
+    if (points_2d.size() != points_3d.size()){
+        std::cout<<"Invalid input, 2D/3D points of different size"<<std::endl;
+    }
 
     // TODO: construct the P matrix (so P * m = 0).
 
@@ -136,6 +142,8 @@ bool CameraCalibration::calibration(
     inverse(B, invB);
     // Let's check if the inverse is correct
     std::cout << "B * invB: \n" << B * invB << std::endl;
+
+
 
     return false;
     // TODO: delete the above code in you final submission (which are just examples).
