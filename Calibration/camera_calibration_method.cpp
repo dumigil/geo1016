@@ -60,12 +60,40 @@ bool CameraCalibration::calibration(
     // TODO: check if input is valid (e.g., number of correspondences >= 6, sizes of 2D/3D points must match)
     if (points_2d.size()<6 || points_3d.size()<6){
         std::cout<<"Invalid Input, less than 6 correspondences"<<std::endl;
+        return false;
     }
     if (points_2d.size() != points_3d.size()){
         std::cout<<"Invalid input, 2D/3D points of different size"<<std::endl;
+        return false;
     }
-
     // TODO: construct the P matrix (so P * m = 0).
+    std::vector<double> p;
+    int j=0;
+    for (auto &i:points_3d) {
+        for(int x=0;x<3;++x){
+            p.push_back(i[x]);
+        }
+        p.push_back(1);
+        p.insert(p.end(),3,0);
+        p.push_back(1);
+        for(int x=0;x<3;++x){
+            p.push_back(-(points_2d[j][0])*i[x]);
+        }
+        p.push_back(-(points_2d[j][0])*1);
+        p.insert(p.end(),3,0);
+        p.push_back(1);
+        for(int x=0;x<3;++x){
+            p.push_back(i[x]);
+        }
+        p.push_back(1);
+        for(int x=0;x<3;++x){
+            p.push_back(-(points_2d[j][1])*i[x]);
+        }
+        p.push_back(-(points_2d[j][1])*1);
+        ++j;
+    }
+    Matrix<double> P(2*points_2d.size(),12,p.data());
+    std::cout << "M: \n" << P << std::endl;
 
     // TODO: solve for M (the whole projection matrix, i.e., M = K * [R, t]) using SVD decomposition.
     //   Optional: you can check if your M is correct by applying M on the 3D points. If correct, the projected point
