@@ -74,14 +74,12 @@ bool CameraCalibration::calibration(
             p.push_back(i[x]);
         }
         p.push_back(1);
-        p.insert(p.end(),3,0);
-        p.push_back(1);
+        p.insert(p.end(),4,0);
         for(int x=0;x<3;++x){
             p.push_back(-(points_2d[j][0])*i[x]);
         }
         p.push_back(-(points_2d[j][0])*1);
-        p.insert(p.end(),3,0);
-        p.push_back(1);
+        p.insert(p.end(),4,0);
         for(int x=0;x<3;++x){
             p.push_back(i[x]);
         }
