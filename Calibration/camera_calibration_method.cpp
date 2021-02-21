@@ -96,9 +96,9 @@ bool CameraCalibration::calibration(
     // TODO: solve for M (the whole projection matrix, i.e., M = K * [R, t]) using SVD decomposition.
     //   Optional: you can check if your M is correct by applying M on the 3D points. If correct, the projected point
     //             should be very close to your input images points.
-    const int m = 2*points_2d.size(), n = 12;
-    Matrix<double> U(m, m, 0.0);
-    Matrix<double> S(m, n, 0.0);
+    const int a = 2*points_2d.size(), n = 12;
+    Matrix<double> U(a, a, 0.0);
+    Matrix<double> S(a, n, 0.0);
     Matrix<double> invV(n, n, 0.0);
     svd_decompose(P, U, S, invV);
 
@@ -111,13 +111,28 @@ bool CameraCalibration::calibration(
     // Check 3: S must be a diagonal matrix
     std::cout << "S: \n" << S << std::endl;
 
+    // Compute its inverse
+    Matrix<double> V(n, n);
+    inverse(invV, V);
 
+    // Check if the inverse is correct
+    std::cout << "V * invV: \n" << V * invV << std::endl;
+    std::cout << "V: \n" << V << std::endl;
 
-    //Matrix<double> M = K * [R, t];
-
-    //svd_decompose(A, U, S, V);
+    Matrix<double> m(12, 1,0.0);
+    for(int i=0;i<12;i++){
+        m[i][0]=V[i][11];
+    }
+    std::cout<<m<<std::endl;
+    std::vector<double>mvec;
+    for(int i=0;i<12;i++){
+        mvec.push_back(m[i][0]);
+    }
+    Matrix<double> M(3,4,mvec.data());
+    std::cout << "M \n" << M << std::endl;
 
     // TODO: extract intrinsic parameters from M.
+
 
     // TODO: extract extrinsic parameters from M.
 
@@ -128,7 +143,7 @@ bool CameraCalibration::calibration(
 
     // TODO: The following code is just an example showing you SVD decomposition, matrix inversion, and some related.
     // TODO: Delete the code below (or change "#if 1" in the first line to "#if 0") in you final submission.
-#if 1
+#if 0
     std::cout << "[Liangliang:] Camera calibration requires computing the SVD and inverse of matrices.\n"
                  "\tIn this assignment, I provide you with a Matrix data structure for storing matrices of arbitrary\n"
                  "\tsizes (see matrix.h). I also wrote the example code to show you how to:\n"
