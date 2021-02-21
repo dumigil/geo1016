@@ -96,6 +96,26 @@ bool CameraCalibration::calibration(
     // TODO: solve for M (the whole projection matrix, i.e., M = K * [R, t]) using SVD decomposition.
     //   Optional: you can check if your M is correct by applying M on the 3D points. If correct, the projected point
     //             should be very close to your input images points.
+    const int m = 2*points_2d.size(), n = 12;
+    Matrix<double> U(m, m, 0.0);
+    Matrix<double> S(m, n, 0.0);
+    Matrix<double> invV(n, n, 0.0);
+    svd_decompose(P, U, S, invV);
+
+    // Check 1: U is orthogonal, so U * U^T must be identity
+    std::cout << "U*U^T: \n" << U * transpose(U) << std::endl;
+
+    // Check 2: V is orthogonal, so V * V^T must be identity
+    std::cout << "V*V^T: \n" << invV * transpose(invV) << std::endl;
+
+    // Check 3: S must be a diagonal matrix
+    std::cout << "S: \n" << S << std::endl;
+
+
+
+    //Matrix<double> M = K * [R, t];
+
+    //svd_decompose(A, U, S, V);
 
     // TODO: extract intrinsic parameters from M.
 
