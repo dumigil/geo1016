@@ -132,9 +132,34 @@ bool CameraCalibration::calibration(
     std::cout << "M \n" << M << std::endl;
 
     // TODO: extract intrinsic parameters from M.
+    vec3 a1(M[0][0], M[0][1], M[0][2]);
+    vec3 a2(M[1][0], M[1][1], M[1][2]);
+    vec3 a3(M[2][0], M[2][1], M[2][2]);
 
+    double r = 1 / a3.length();
+    cx = r * r * dot(a1, a3);
+    cy = r * r * dot(a2, a3);
+    skew = acos(-dot(cross(a1, a3), cross(a2, a3)) / (cross(a1, a3).length() * cross(a2, a3).length()));
+    fx = r * r * cross(a1, a3).length() * sin(skew);
+    fy = r * r * cross(a2, a3).length() * sin(skew);
 
     // TODO: extract extrinsic parameters from M.
+    double b1 = M[0][3];
+    double b2 = M[1][3];
+    double b3 = M[2][3];
+
+    vec3 r1 = (cross(a2, a3)) / (cross(a2, a3).length());
+    vec3 r3 = r * a3;
+    vec3 r2 = cross(r3, r1);
+    std::vector<double> key = {fx, skew, cx, 0, fy, cy, 0, 0, 1};
+    Matrix<double> K(3, 3, key.data());
+    Matrix<double> invK(3, 3);
+    inverse(K, invK);
+
+    std::vector<double> B = {b1, b2, b3};
+    Matrix<double> b(3, 1, B.data());
+
+    t = p * invK * b;
 
     // TODO: uncomment the line below to return true when testing your algorithm and in you final submission.
     //return false;
