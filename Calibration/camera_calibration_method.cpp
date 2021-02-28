@@ -165,7 +165,7 @@ bool CameraCalibration::calibration(
     double ty = T[1][0];
     double tz = T[2][0];
 
-    std::cout<<"Extrinsic parameters R & t "<<std::endl;
+    std::cout<<"Extrinsic parameters rotation R & translation t "<<std::endl;
     std::cout<<r1<<" "<<r2<<" "<<r3<<std::endl;
     std::cout<<tx<<" "<<ty<<" "<<tz<<std::endl;
     // TODO: uncomment the line below to return true when testing your algorithm and in you final submission.
