@@ -142,6 +142,7 @@ bool CameraCalibration::calibration(
     skew = acos(-dot(cross(a1, a3), cross(a2, a3)) / (cross(a1, a3).length() * cross(a2, a3).length()));
     fx = r * r * cross(a1, a3).length() * sin(skew);
     fy = r * r * cross(a2, a3).length() * sin(skew);
+    std::cout<<cx<<" "<<cy<<" "<<skew<<" "<<fx<<" "<<fy<<std::endl;
 
     // TODO: extract extrinsic parameters from M.
     double b1 = M[0][3];
@@ -159,8 +160,13 @@ bool CameraCalibration::calibration(
     std::vector<double> B = {b1, b2, b3};
     Matrix<double> b(3, 1, B.data());
 
-    t = p * invK * b;
+    Matrix<double> T(r * invK * b);
+    double tx = T[0][0];
+    double ty = T[1][0];
+    double tz = T[2][0];
 
+    std::cout<<r1<<" "<<r2<<" "<<r3<<std::endl;
+    std::cout<<tx<<" "<<ty<<" "<<tz<<std::endl;
     // TODO: uncomment the line below to return true when testing your algorithm and in you final submission.
     //return false;
 
