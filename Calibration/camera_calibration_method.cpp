@@ -161,10 +161,11 @@ bool CameraCalibration::calibration(
     vec3 b= vec3(b1,b2,b3);
 
     t=(r * invK * b);
-
+    std::cout<<"Extrinsic parameters rotation R "<<R;
+    std::cout<<"Extrinsic parameters translation t "<<t;
     return true;
 
-//    std::cout<<"Extrinsic parameters rotation R & translation t "<<std::endl;
+    std::cout<<"Extrinsic parameters rotation R & translation t "<<std::endl;
 //    std::cout<<r1<<" "<<r2<<" "<<r3<<std::endl;
 //    std::cout<<tx<<" "<<ty<<" "<<tz<<std::endl;
     // TODO: uncomment the line below to return true when testing your algorithm and in you final submission.
