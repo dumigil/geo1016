@@ -99,24 +99,24 @@ bool CameraCalibration::calibration(
     const int a = 2*points_2d.size(), n = 12;
     Matrix<double> U(a, a, 0.0);
     Matrix<double> S(a, n, 0.0);
-    Matrix<double> invV(n, n, 0.0);
-    svd_decompose(P, U, S, invV);
+    Matrix<double> V(n, n, 0.0);
+    svd_decompose(P, U, S, V);
 
     // Check 1: U is orthogonal, so U * U^T must be identity
     std::cout << "U*U^T: \n" << U * transpose(U) << std::endl;
 
     // Check 2: V is orthogonal, so V * V^T must be identity
-    std::cout << "V*V^T: \n" << invV * transpose(invV) << std::endl;
+    std::cout << "V*V^T: \n" << V * transpose(V) << std::endl;
 
     // Check 3: S must be a diagonal matrix
     std::cout << "S: \n" << S << std::endl;
 
     // Compute its inverse
-    Matrix<double> V(n, n);
-    inverse(invV, V);
+//    Matrix<double> V(n, n);
+//    inverse(V, V);
 
     // Check if the inverse is correct
-    std::cout << "V * invV: \n" << V * invV << std::endl;
+    std::cout << "V * invV: \n" << V * V << std::endl;
     std::cout << "V: \n" << V << std::endl;
 
     Matrix<double> m(12, 1,0.0);
@@ -136,7 +136,7 @@ bool CameraCalibration::calibration(
     vec3 a2(M[1][0], M[1][1], M[1][2]);
     vec3 a3(M[2][0], M[2][1], M[2][2]);
 
-    double r = 1 / a3.length();
+    float r = 1 / a3.length();
     cx = r * r * dot(a1, a3);
     cy = r * r * dot(a2, a3);
     skew = acos(-dot(cross(a1, a3), cross(a2, a3)) / (cross(a1, a3).length() * cross(a2, a3).length()));
@@ -152,22 +152,21 @@ bool CameraCalibration::calibration(
     vec3 r1 = (cross(a2, a3)) / (cross(a2, a3).length());
     vec3 r3 = r * a3;
     vec3 r2 = cross(r3, r1);
+    R = mat3 (r1[0], r1[1], r1[2], r2[0], r2[1], r2[2], r3[0], r3[1], r3[2]);
     std::vector<double> key = {fx, skew, cx, 0, fy, cy, 0, 0, 1};
-    Matrix<double> K(3, 3, key.data());
-    Matrix<double> invK(3, 3);
-    inverse(K, invK);
+    mat3 K=mat3 (fx, skew, cx, 0, fy, cy, 0, 0, 1);
+    mat3 invK = inverse(K);
 
     std::vector<double> B = {b1, b2, b3};
-    Matrix<double> b(3, 1, B.data());
+    vec3 b= vec3(b1,b2,b3);
 
-    Matrix<double> T(r * invK * b);
-    double tx = T[0][0];
-    double ty = T[1][0];
-    double tz = T[2][0];
+    t=(r * invK * b);
 
-    std::cout<<"Extrinsic parameters rotation R & translation t "<<std::endl;
-    std::cout<<r1<<" "<<r2<<" "<<r3<<std::endl;
-    std::cout<<tx<<" "<<ty<<" "<<tz<<std::endl;
+    return true;
+
+//    std::cout<<"Extrinsic parameters rotation R & translation t "<<std::endl;
+//    std::cout<<r1<<" "<<r2<<" "<<r3<<std::endl;
+//    std::cout<<tx<<" "<<ty<<" "<<tz<<std::endl;
     // TODO: uncomment the line below to return true when testing your algorithm and in you final submission.
     //return false;
 
