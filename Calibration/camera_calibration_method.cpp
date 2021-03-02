@@ -91,7 +91,7 @@ bool CameraCalibration::calibration(
         ++j;
     }
     Matrix<double> P(2*points_2d.size(),12,p.data());
-    std::cout << "M: \n" << P << std::endl;
+    std::cout << "P: \n" << P << std::endl;
 
     // TODO: solve for M (the whole projection matrix, i.e., M = K * [R, t]) using SVD decomposition.
     //   Optional: you can check if your M is correct by applying M on the 3D points. If correct, the projected point
@@ -111,13 +111,6 @@ bool CameraCalibration::calibration(
     // Check 3: S must be a diagonal matrix
     std::cout << "S: \n" << S << std::endl;
 
-    // Compute its inverse
-//    Matrix<double> V(n, n);
-//    inverse(V, V);
-
-    // Check if the inverse is correct
-    std::cout << "V * invV: \n" << V * V << std::endl;
-    std::cout << "V: \n" << V << std::endl;
 
     Matrix<double> m(12, 1,0.0);
     for(int i=0;i<12;i++){
