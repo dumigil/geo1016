@@ -91,7 +91,7 @@ bool CameraCalibration::calibration(
         ++j;
     }
     Matrix<double> P(2*points_2d.size(),12,p.data());
-    std::cout << "M: \n" << P << std::endl;
+    std::cout << "P: \n" << P << std::endl;
 
     // TODO: solve for M (the whole projection matrix, i.e., M = K * [R, t]) using SVD decomposition.
     //   Optional: you can check if your M is correct by applying M on the 3D points. If correct, the projected point
@@ -111,9 +111,6 @@ bool CameraCalibration::calibration(
     // Check 3: S must be a diagonal matrix
     std::cout << "S: \n" << S << std::endl;
 
-    // Check if the inverse is correct
-    std::cout << "V * invV: \n" << V * V << std::endl;
-    std::cout << "V: \n" << V << std::endl;
 
     Matrix<double> m(12, 1,0.0);
     for(int i=0;i<12;i++){
@@ -159,10 +156,11 @@ bool CameraCalibration::calibration(
     t=(r * invK * b);
     std::cout<<"Extrinsic parameters rotation R "<<R;
     std::cout<<"Extrinsic parameters translation t "<<t;
-
     return true;
 
-
+    std::cout<<"Extrinsic parameters rotation R & translation t "<<std::endl;
+//    std::cout<<r1<<" "<<r2<<" "<<r3<<std::endl;
+//    std::cout<<tx<<" "<<ty<<" "<<tz<<std::endl;
     // TODO: uncomment the line below to return true when testing your algorithm and in you final submission.
     //return false;
 
