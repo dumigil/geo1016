@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc ../../lib/libeasy3d_fileio.a  CMakeFiles/easy3d_fileio.dir/image_io.cpp.o CMakeFiles/easy3d_fileio.dir/surface_mesh_io.cpp.o CMakeFiles/easy3d_fileio.dir/surface_mesh_io_obj.cpp.o CMakeFiles/easy3d_fileio.dir/resources.cpp.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib ../../lib/libeasy3d_fileio.a

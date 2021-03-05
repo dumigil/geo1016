@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc ../../lib/lib3rd_glog.a  CMakeFiles/3rd_glog.dir/logging.cc.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib ../../lib/lib3rd_glog.a
