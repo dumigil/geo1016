@@ -24,7 +24,8 @@
 
 #include "camera_calibration.h"
 #include "matrix_algo.h"
-
+//GROUP 5
+//LINK TO GITHUB: https://github.com/dumigil/geo1016/
 
 using namespace easy3d;
 
