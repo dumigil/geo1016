@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc ../../lib/libeasy3d_optimizer.a  CMakeFiles/easy3d_optimizer.dir/optimizer_lm.cpp.o
+/Library/Developer/CommandLineTools/usr/bin/ranlib ../../lib/libeasy3d_optimizer.a
