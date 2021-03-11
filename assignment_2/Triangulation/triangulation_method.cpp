@@ -161,13 +161,13 @@ bool Triangulation::triangulation(
     /// ----------- dynamic-size matrices
 
     /// define a non-fixed size matrix
-    Matrix<double> W(2, 3, 0.0); // all entries initialized to 0.0.
+    //Matrix<double> W(2, 3, 0.0); // all entries initialized to 0.0.
 
     /// set its first row by a 3D vector (1.1, 2.2, 3.3)
-    W.set_row({ 1.1, 2.2, 3.3 }, 0);   // here "{ 1.1, 2.2, 3.3 }" is of type 'std::vector<double>'
+    //W.set_row({ 1.1, 2.2, 3.3 }, 0);   // here "{ 1.1, 2.2, 3.3 }" is of type 'std::vector<double>'
 
     /// get the last column of a matrix
-    std::vector<double> last_column = W.get_column(W.cols() - 1);
+    //std::vector<double> last_column = W.get_column(W.cols() - 1);
 
     // TODO: delete all above demo code in the final submission
 
@@ -175,12 +175,67 @@ bool Triangulation::triangulation(
     // implementation starts ...
 
     // TODO: check if the input is valid (always good because you never known how others will call your function).
-
+    if (points_0.size()<8 || points_1.size()<8 || points_0.size()!=points_1.size()) {
+        std::cout << "Invalid input" << std::endl;
+        return false;
+    }
     // TODO: Estimate relative pose of two views. This can be subdivided into
     //      - estimate the fundamental matrix F;
     //      - compute the essential matrix E;
     //      - recover rotation R and t.
-
+//******************************** Normalization ***********************************//
+    float x0=0, y0=0;
+    for (vec3 p0:points_0) {
+       x0 = x0 + p0[0];
+       y0 = y0 + p0[1];
+    }
+    vec3 centroid0 = {x0 / points_0.size(), y0 / points_0.size(), 1};
+    float S0=0;
+    float  x0_mean, y0_mean;
+    for (vec3 i:points_0){
+        x0_mean = i[0] - centroid0[0];
+        y0_mean = i[1] - centroid0[1];
+        S0 = S0 + ((x0_mean*x0_mean) + (y0_mean*y0_mean));
+    }
+    float s0 = (sqrt(2) / sqrt(S0));
+//    std::cout<<"s0 is: \n" << s0 << std::endl;
+    float x1=0, y1=0;
+    for (vec3 p1:points_1) {
+        x1 = x1 + p1[0];
+        y1 = y1 + p1[1];
+    }
+    vec3 centroid1 = {x1 / points_1.size(), y1 / points_1.size(), 1};
+    float S1=0;
+    float x1_mean, y1_mean;
+    for (vec3 i:points_1){
+        x1_mean = i[0] - centroid1[0];
+        y1_mean = i[1] - centroid1[1];
+        S1 = S1 + ((x1_mean*x1_mean) + (y1_mean*y1_mean));
+    }
+    float s1 = (sqrt(2) / sqrt(S1));
+//    std::cout<<"s1 is: \n" << s1 << std::endl;
+    mat3 scale0=mat3 (s0, 0, 0, 0, s0, 0, 0, 0, 1);
+    mat3 trans0 = mat3 (1, 0, -centroid0[0], 0, 1, -centroid0[1], 0, 0, 1);
+    mat3 scale1=mat3 (s1, 0, 0, 0, s1, 0, 0, 0, 1);
+    mat3 trans1 = mat3 (1, 0, -centroid1[0], 0, 1, -centroid1[1], 0, 0, 1);
+    mat3 T0 = scale0 * trans0;
+    mat3 T1 = scale1 * trans1;
+//    std::cout<<"T0 is: \n" << T0 << std::endl;
+//    std::cout<<"trans0 is: \n" << trans0 << std::endl;
+//    std::cout<<"trans0 is: \n" << scale0 << std::endl;
+    std::vector<vec3> q0;
+    for (vec3 i:points_0){
+        mat3 q = mat3 (T0 * i);
+        q0.emplace_back(q[0], q[1], q[2]);
+    }
+    std::vector<vec3> q1;
+    for (vec3 i:points_0){
+        mat3 q = mat3 (T1 * i);
+        q1.emplace_back(q[0], q[1], q[2]);
+    }
+    std::cout<<"q0 is: \n" << q0 << std::endl;
+    std::cout<<"q1 is: \n" << q1 << std::endl;
+//    Matrix<double> W(160, 9, 0.0);
     // TODO: Reconstruct 3D points. The main task is
     //      - triangulate a pair of image points (i.e., compute the 3D coordinates for each corresponding point pair)
 
