@@ -183,7 +183,7 @@ bool Triangulation::triangulation(
     //      - estimate the fundamental matrix F;
     //      - compute the essential matrix E;
     //      - recover rotation R and t.
-//******************************** Normalization ***********************************//
+/******************************** Normalization ***********************************/
     float x0=0, y0=0;
     for (vec3 p0:points_0) {
        x0 = x0 + p0[0];
@@ -235,7 +235,47 @@ bool Triangulation::triangulation(
     }
     std::cout<<"q0 is: \n" << q0 << std::endl;
     std::cout<<"q1 is: \n" << q1 << std::endl;
-//    Matrix<double> W(160, 9, 0.0);
+
+/******************************************** Fundamental Matrix *****************************/
+    Matrix<double> W(q0.size(), 9, 0.0);
+    for (int i = 0; i < q0.size(); i++){
+        double a = q0[i][0] * q1[i][0];
+        double b1 = q0[i][1] * q1[i][0];
+        double c1 = q1[i][0];
+        double d = q0[i][0] * q1[i][1];
+        double e = q0[i][1] * q1[i][1];
+        double f = q1[i][1];
+        double g = q0[i][0];
+        double h = q0[i][1];
+
+        W.set_row({a, b1, c1, d, e, f, g, h, 1}, i);
+//        W0.set(1, 0,a); W0.set(1, 1,b); W0.set(1, 2,c);
+//        W0.set(1, 3,d); W0.set(1, 4,e); W0.set(1, 5,f);
+//        W0.set(1, 6,g); W0.set(1, 7,h); W0.set(1, 8,1);
+    }
+//    std::cout<<"W is: \n" << W << std::endl;
+    Matrix<double> U(W.rows(), W.rows() , 0.0);
+    Matrix<double> S(W.rows(), W.cols() , 0.0);
+    Matrix<double> V(W.cols(), W.cols() , 0.0);
+    svd_decompose(W, U, S, V);
+
+    std::vector<double> f = V.get_column(V.cols() - 1);
+
+    Matrix<double> fm(3, 3, f);
+    mat3 Fm = to_mat3(fm);
+    std::cout<<"Fm is: \n" << Fm << std::endl;
+
+    Matrix<double> UFm(fm.rows(), fm.rows() , 0.0);
+    Matrix<double> SFm(fm.rows(), fm.cols() , 0.0);
+    Matrix<double> VFm(fm.cols(), fm.cols() , 0.0);
+    svd_decompose(fm, UFm, SFm, VFm);
+    SFm.set(SFm.rows()-1, SFm.cols()-1, 0.0);
+
+//    std::cout<<"SFm is: \n" << SFm << std::endl;
+
+    mat3 Fund = mat3 ( transpose(T1) * Fm * T1);
+    std::cout<<"Fund is: \n" << Fund << std::endl;
+
     // TODO: Reconstruct 3D points. The main task is
     //      - triangulate a pair of image points (i.e., compute the 3D coordinates for each corresponding point pair)
 
