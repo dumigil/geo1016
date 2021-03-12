@@ -195,10 +195,10 @@ bool Triangulation::triangulation(
     for (vec3 i:points_0){
         x0_mean = i[0] - centroid0[0];
         y0_mean = i[1] - centroid0[1];
-        S0 = S0 + ((x0_mean*x0_mean) + (y0_mean*y0_mean));
+        S0 = S0 + sqrt((x0_mean*x0_mean) + (y0_mean*y0_mean));
     }
-    float s0 = (sqrt(2) / sqrt(S0));
-//    std::cout<<"s0 is: \n" << s0 << std::endl;
+    float s0 = (sqrt(2) / (S0/160));
+    std::cout<<"s0 is: \n" << s0 << std::endl;
     float x1=0, y1=0;
     for (vec3 p1:points_1) {
         x1 = x1 + p1[0];
@@ -210,10 +210,10 @@ bool Triangulation::triangulation(
     for (vec3 i:points_1){
         x1_mean = i[0] - centroid1[0];
         y1_mean = i[1] - centroid1[1];
-        S1 = S1 + ((x1_mean*x1_mean) + (y1_mean*y1_mean));
+        S1 = S1 + sqrt(((x1_mean*x1_mean) + (y1_mean*y1_mean)));
     }
-    float s1 = (sqrt(2) / sqrt(S1));
-//    std::cout<<"s1 is: \n" << s1 << std::endl;
+    float s1 = (sqrt(2) / (S1/160));
+    std::cout<<"s1 is: \n" << s1 << std::endl;
     mat3 scale0=mat3 (s0, 0, 0, 0, s0, 0, 0, 0, 1);
     mat3 trans0 = mat3 (1, 0, -centroid0[0], 0, 1, -centroid0[1], 0, 0, 1);
     mat3 scale1=mat3 (s1, 0, 0, 0, s1, 0, 0, 0, 1);
@@ -239,16 +239,16 @@ bool Triangulation::triangulation(
 /******************************************** Fundamental Matrix *****************************/
     Matrix<double> W(q0.size(), 9, 0.0);
     for (int i = 0; i < q0.size(); i++){
-        double a = q0[i][0] * q1[i][0];
-        double b1 = q0[i][1] * q1[i][0];
-        double c1 = q1[i][0];
-        double d = q0[i][0] * q1[i][1];
-        double e = q0[i][1] * q1[i][1];
-        double f = q1[i][1];
-        double g = q0[i][0];
-        double h = q0[i][1];
+        double e0 = q0[i][0] * q1[i][0];
+        double e1 = q0[i][1] * q1[i][0];
+        double e2 = q1[i][0];
+        double e3 = q0[i][0] * q1[i][1];
+        double e4 = q0[i][1] * q1[i][1];
+        double e5 = q1[i][1];
+        double e6 = q0[i][0];
+        double e7 = q0[i][1];
 
-        W.set_row({a, b1, c1, d, e, f, g, h, 1}, i);
+        W.set_row({e0, e1, e2, e3, e4, e5, e6, e7, 1}, i);
 //        W0.set(1, 0,a); W0.set(1, 1,b); W0.set(1, 2,c);
 //        W0.set(1, 3,d); W0.set(1, 4,e); W0.set(1, 5,f);
 //        W0.set(1, 6,g); W0.set(1, 7,h); W0.set(1, 8,1);
@@ -274,7 +274,28 @@ bool Triangulation::triangulation(
 //    std::cout<<"SFm is: \n" << SFm << std::endl;
 
     mat3 Fund = mat3 ( transpose(T1) * Fm * T1);
-    std::cout<<"Fund is: \n" << Fund << std::endl;
+    Matrix<double> Final = to_Matrix(Fund);
+    Final.set(Final.rows()-1, Final.cols()-1, 1.0);
+    std::cout<<"F is: \n" << Final << std::endl;
+    auto test = points_0[0][1] * Final * points_1[0][1];
+    std::cout<<"test is: \n" << test << std::endl;
+    /*********************************** Essential matrix *********************************/
+    mat3 K;
+    K.set_row(0, vec3(fx, 0, cx));
+    K.set_row(1, vec3(0, fy, cy));
+    K.set_row(2, vec3(0, 0, 1));
+
+    mat3 Etest;
+    Etest = transpose(K) * Fund * K;
+
+    auto E = to_Matrix(Etest);
+    Matrix<double> UE(E.rows(), E.rows() , 0.0);
+    Matrix<double> SE(E.rows(), E.cols() , 0.0);
+    Matrix<double> VE(E.cols(), E.cols() , 0.0);
+    svd_decompose(E, UE, SE, VE);
+
+    std::cout<<"E is: \n" << E << std::endl;
+
 
     // TODO: Reconstruct 3D points. The main task is
     //      - triangulate a pair of image points (i.e., compute the 3D coordinates for each corresponding point pair)
