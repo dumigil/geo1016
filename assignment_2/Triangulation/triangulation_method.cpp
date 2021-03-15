@@ -59,6 +59,52 @@ Matrix<double> to_Matrix(const mat &M) {
  * TODO: Finish this function for reconstructing 3D geometry from corresponding image points.
  * @return True on success, otherwise false. On success, the reconstructed 3D points must be written to 'points_3d'.
  */
+vec3 triangulatenpoints (vec3 points_0,vec3 points_1,mat3 K,mat3 R,vec3 t ){
+    mat34 Rt0(1.0f);
+    mat34 M0 = mat34 (K * Rt0);
+    mat34 Rt1;
+    Rt1.set_col(0, R.col(0));
+    Rt1.set_col(1, R.col(1));
+    Rt1.set_col(2, R.col(2));
+    Rt1.set_col(3, t);
+
+    mat34 M1;
+    M1= K*Rt1;
+//    vec4 M01 = M0.row(0);
+//    vec4 M02 = M0.row(1);
+//    vec4 M03 = M0.row(2);
+//    vec4 M11 = M1.row(0);
+//    vec4 M12 = M1.row(1);
+//    vec4 M13 = M1.row(2);
+    vec4 r1,r2,r3,r4;
+    Matrix<double> A;
+
+    r1 = points_0.x*M0.row(2) - M0.row(0);
+    r2 = points_0.y*M0.row(2) - M0.row(1);
+    r3 = points_1.x*M1.row(2) - M1.row(0);
+    r4 = points_1.y*M1.row(2) - M1.row(1);
+    A.set_row({r1[0],r1[1],r1[3],r1[3]},0);
+    A.set_row({r2[0],r2[1],r2[2],r2[3]},1);
+    A.set_row({r3[0],r3[1],r3[2],r3[3]},2);
+    A.set_row({r4[0],r4[1],r4[2],r4[3]},3);
+
+//    A.set_row({points_0.x * M03 - M01}, 0);
+//    A.set_row((points_0.y * M0[2]) - M0[1]);
+//    A.set_row((points_1.x * M1[2]) - M1[0]);
+//    A.set_row((points_1.y * M1[2]) - M1[1]);
+
+    Matrix<double> UA(A.rows(), A.rows() , 0.0);
+    Matrix<double> SA(A.rows(), A.cols() , 0.0);
+    Matrix<double> VA(A.cols(), A.cols() , 0.0);
+
+    svd_decompose(A, UA,SA,VA);
+    vec4 points4;
+    points4 = vec4 (VA.get_column(VA.cols() - 1).data());
+    vec3 points3;
+    points3 = vec3 (points4[0]/points4[3], points4[1]/points4[3], points4[2]/points4[3]);
+    return points3;
+
+}
 bool Triangulation::triangulation(
         float fx, float fy,     /// input: the focal lengths (same for both cameras)
         float cx, float cy,     /// input: the principal point (same for both cameras)
@@ -153,10 +199,10 @@ bool Triangulation::triangulation(
     cross_prod.normalize();
 
     /// a 3 by 3 matrix (all entries are intentionally NOT initialized for efficiency reasons)
-    mat3 F;
+    //mat3 F;
     /// ... here you compute or initialize F.
     /// compute the inverse of K
-    mat3 invF = inverse(F);
+    //mat3 invF = inverse(F);
 
     /// ----------- dynamic-size matrices
 
@@ -183,7 +229,7 @@ bool Triangulation::triangulation(
     //      - estimate the fundamental matrix F;
     //      - compute the essential matrix E;
     //      - recover rotation R and t.
-/******************************** Normalization ***********************************/
+    // Normalization
     float x0=0, y0=0;
     for (vec3 p0:points_0) {
        x0 = x0 + p0[0];
@@ -197,7 +243,7 @@ bool Triangulation::triangulation(
         y0_mean = i[1] - centroid0[1];
         S0 = S0 + sqrt((x0_mean*x0_mean) + (y0_mean*y0_mean));
     }
-    float s0 = (sqrt(2) / (S0/160));
+    double s0 = (sqrt(2) / (S0/160));
     std::cout<<"s0 is: \n" << s0 << std::endl;
     float x1=0, y1=0;
     for (vec3 p1:points_1) {
@@ -212,7 +258,7 @@ bool Triangulation::triangulation(
         y1_mean = i[1] - centroid1[1];
         S1 = S1 + sqrt(((x1_mean*x1_mean) + (y1_mean*y1_mean)));
     }
-    float s1 = (sqrt(2) / (S1/160));
+    double s1 = (sqrt(2) / (S1/160));
     std::cout<<"s1 is: \n" << s1 << std::endl;
     mat3 scale0=mat3 (s0, 0, 0, 0, s0, 0, 0, 0, 1);
     mat3 trans0 = mat3 (1, 0, -centroid0[0], 0, 1, -centroid0[1], 0, 0, 1);
@@ -220,38 +266,32 @@ bool Triangulation::triangulation(
     mat3 trans1 = mat3 (1, 0, -centroid1[0], 0, 1, -centroid1[1], 0, 0, 1);
     mat3 T0 = scale0 * trans0;
     mat3 T1 = scale1 * trans1;
-//    std::cout<<"T0 is: \n" << T0 << std::endl;
-//    std::cout<<"trans0 is: \n" << trans0 << std::endl;
-//    std::cout<<"trans0 is: \n" << scale0 << std::endl;
-    std::vector<vec3> q0;
-    for (vec3 i:points_0){
-        mat3 q = mat3 (T0 * i);
-        q0.emplace_back(q[0], q[1], q[2]);
-    }
-    std::vector<vec3> q1;
-    for (vec3 i:points_0){
-        mat3 q = mat3 (T1 * i);
-        q1.emplace_back(q[0], q[1], q[2]);
-    }
-    std::cout<<"q0 is: \n" << q0 << std::endl;
-    std::cout<<"q1 is: \n" << q1 << std::endl;
 
-/******************************************** Fundamental Matrix *****************************/
+//    mat3 T0;
+//    mat3 T1;
+//    T0.set_row(0, vec3(s0, 0, -(s0*centroid0[0])));
+//    T0.set_row(1, vec3(0, s0, -(s0*centroid0[1])));
+//    T0.set_row(2, vec3(0, 0, 1));
+//    T1.set_row(0, vec3(s1, 0, -(s1*centroid1[0])));
+//    T1.set_row(1, vec3(0, s1, -(s1*centroid1[1])));
+//    T1.set_row(2, vec3(0, 0, 1));
+
+    std::cout<<"T0 is: \n" << T0 << std::endl;
+    std::cout<<"T0 is: \n" << T1 << std::endl;
+
+    std::vector<vec3> q0;
+    std::vector<vec3> q1;
+    for (int i = 0; i < points_0.size(); i++){
+        q0.push_back(T0 * points_0[i]);
+        q1.push_back(T1 * points_1[i]);
+    }
+//    std::cout<<"q0 is: \n" << q0 << std::endl;
+//    std::cout<<"q1 is: \n" << q1 << std::endl;
+
+    // Fundamental matrix
     Matrix<double> W(q0.size(), 9, 0.0);
     for (int i = 0; i < q0.size(); i++){
-        double e0 = q0[i][0] * q1[i][0];
-        double e1 = q0[i][1] * q1[i][0];
-        double e2 = q1[i][0];
-        double e3 = q0[i][0] * q1[i][1];
-        double e4 = q0[i][1] * q1[i][1];
-        double e5 = q1[i][1];
-        double e6 = q0[i][0];
-        double e7 = q0[i][1];
-
-        W.set_row({e0, e1, e2, e3, e4, e5, e6, e7, 1}, i);
-//        W0.set(1, 0,a); W0.set(1, 1,b); W0.set(1, 2,c);
-//        W0.set(1, 3,d); W0.set(1, 4,e); W0.set(1, 5,f);
-//        W0.set(1, 6,g); W0.set(1, 7,h); W0.set(1, 8,1);
+        W.set_row({q0[i][0] * q1[i][0], q0[i][1] * q1[i][0], q1[i][0], q0[i][0] * q1[i][1], q0[i][1] * q1[i][1], q1[i][1], q0[i][0], q0[i][1], 1}, i);
     }
 //    std::cout<<"W is: \n" << W << std::endl;
     Matrix<double> U(W.rows(), W.rows() , 0.0);
@@ -260,46 +300,71 @@ bool Triangulation::triangulation(
     svd_decompose(W, U, S, V);
 
     std::vector<double> f = V.get_column(V.cols() - 1);
-
+    std::cout<<"f is: \n" << f << std::endl;
     Matrix<double> fm(3, 3, f);
-    mat3 Fm = to_mat3(fm);
-    std::cout<<"Fm is: \n" << Fm << std::endl;
+    std::cout<<"f is: \n" << fm << std::endl;
 
     Matrix<double> UFm(fm.rows(), fm.rows() , 0.0);
     Matrix<double> SFm(fm.rows(), fm.cols() , 0.0);
     Matrix<double> VFm(fm.cols(), fm.cols() , 0.0);
     svd_decompose(fm, UFm, SFm, VFm);
     SFm.set(SFm.rows()-1, SFm.cols()-1, 0.0);
+    auto fmnew = UFm * SFm * transpose(VFm);
+    mat3 Fm = to_mat3(fmnew);
+    std::cout<<"Fm is: \n" << Fm << std::endl;
 
 //    std::cout<<"SFm is: \n" << SFm << std::endl;
 
-    mat3 Fund = mat3 ( transpose(T1) * Fm * T1);
-    Matrix<double> Final = to_Matrix(Fund);
-    Final.set(Final.rows()-1, Final.cols()-1, 1.0);
-    std::cout<<"F is: \n" << Final << std::endl;
-    auto test = points_0[0][1] * Final * points_1[0][1];
-    std::cout<<"test is: \n" << test << std::endl;
-    /*********************************** Essential matrix *********************************/
+    mat3 F = mat3 (transpose(T1) * Fm * T0);
+    F = F/(F(2,2));
+//    Matrix<double> Fin = to_Matrix(Fund);
+//    Fin.set(Fin.rows()-1, Fin.cols()-1, 1.0);
+//    mat3 F = to_mat3(Fin);
+    std::cout<<"F is: \n" << F << std::endl;
+//    auto test = (q0[0][1]) * Final * q1[0][1];
+//    std::cout<<"test is: \n" << test << std::endl;
+
+    // Essential Matrix
     mat3 K;
     K.set_row(0, vec3(fx, 0, cx));
     K.set_row(1, vec3(0, fy, cy));
     K.set_row(2, vec3(0, 0, 1));
 
     mat3 Etest;
-    Etest = transpose(K) * Fund * K;
+    Etest = transpose(K) * F * K;
 
-    auto E = to_Matrix(Etest);
+    Matrix<double> E;
+    E = to_Matrix(Etest);
     Matrix<double> UE(E.rows(), E.rows() , 0.0);
     Matrix<double> SE(E.rows(), E.cols() , 0.0);
     Matrix<double> VE(E.cols(), E.cols() , 0.0);
     svd_decompose(E, UE, SE, VE);
 
-    std::cout<<"E is: \n" << E << std::endl;
+    std::cout<<"E is: \n" << Etest << std::endl;
 
+    mat3 W1;
+    W1.set_row(0, vec3(0, -1, 0));
+    W1.set_row(1, vec3(1, 0, 0));
+    W1.set_row(2, vec3(0, 0, 1));
+
+    mat3 Ue = to_mat3(UE);
+    mat3 Ve = to_mat3(VE);
+//    std::cout<<"UE is: \n" << UE << std::endl;
+//    std::cout<<"Ue is: \n" << Ue << std::endl;
+    std::vector<double> temp = VE.get_column(VE.cols() - 1);
+  //  t = vec3(temp.data());
+    t = - vec3(temp.data());
+//    std::cout<<"temp is: \n" << temp << std::endl;
+
+    //R = W)*transpose(Ve)*determinant(to_Matrix(Ue*W1*transpose(Ve)));
+    R = Ue*transpose(W1)*transpose(Ve)*determinant(to_Matrix(Ue*transpose(W1)*transpose(Ve)));
 
     // TODO: Reconstruct 3D points. The main task is
     //      - triangulate a pair of image points (i.e., compute the 3D coordinates for each corresponding point pair)
 
+//    for (int i = 0; i < points_0.size(); i++){
+//        points_3d.push_back(triangulatenpoints(points_0[i], points_1[i], K, R, t));
+//    }
     // TODO: Don't forget to
     //          - write your recovered 3D points into 'points_3d' (the viewer can visualize the 3D points for you);
     //          - write the recovered relative pose into R and t (the view will be updated as seen from the 2nd camera,
