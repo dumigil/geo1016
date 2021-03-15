@@ -70,28 +70,17 @@ vec3 triangulatenpoints (vec3 points_0,vec3 points_1,mat3 K,mat3 R,vec3 t ){
 
     mat34 M1;
     M1= K*Rt1;
-//    vec4 M01 = M0.row(0);
-//    vec4 M02 = M0.row(1);
-//    vec4 M03 = M0.row(2);
-//    vec4 M11 = M1.row(0);
-//    vec4 M12 = M1.row(1);
-//    vec4 M13 = M1.row(2);
     vec4 r1,r2,r3,r4;
-    Matrix<double> A;
+    Matrix<double> A(4, 4, 0.);
 
     r1 = points_0.x*M0.row(2) - M0.row(0);
     r2 = points_0.y*M0.row(2) - M0.row(1);
     r3 = points_1.x*M1.row(2) - M1.row(0);
     r4 = points_1.y*M1.row(2) - M1.row(1);
-    A.set_row({r1[0],r1[1],r1[3],r1[3]},0);
+    A.set_row({r1[0],r1[1],r1[2],r1[3]},0);
     A.set_row({r2[0],r2[1],r2[2],r2[3]},1);
     A.set_row({r3[0],r3[1],r3[2],r3[3]},2);
     A.set_row({r4[0],r4[1],r4[2],r4[3]},3);
-
-//    A.set_row({points_0.x * M03 - M01}, 0);
-//    A.set_row((points_0.y * M0[2]) - M0[1]);
-//    A.set_row((points_1.x * M1[2]) - M1[0]);
-//    A.set_row((points_1.y * M1[2]) - M1[1]);
 
     Matrix<double> UA(A.rows(), A.rows() , 0.0);
     Matrix<double> SA(A.rows(), A.cols() , 0.0);
@@ -351,20 +340,22 @@ bool Triangulation::triangulation(
     mat3 Ve = to_mat3(VE);
 //    std::cout<<"UE is: \n" << UE << std::endl;
 //    std::cout<<"Ue is: \n" << Ue << std::endl;
-    std::vector<double> temp = VE.get_column(VE.cols() - 1);
-  //  t = vec3(temp.data());
-    t = - vec3(temp.data());
-//    std::cout<<"temp is: \n" << temp << std::endl;
+    std::vector<double> temp = UE.get_column(UE.cols() - 1);
+     t = vec3(temp.data());
+//    t = - vec3(temp.data());
+    std::cout<<"temp is: \n" << t << std::endl;
 
-    //R = W)*transpose(Ve)*determinant(to_Matrix(Ue*W1*transpose(Ve)));
-    R = Ue*transpose(W1)*transpose(Ve)*determinant(to_Matrix(Ue*transpose(W1)*transpose(Ve)));
+//    R = Ue * W1 * transpose(Ve) * determinant(to_Matrix(Ue*W1*transpose(Ve)));
+    R = Ue * transpose(W1)*transpose(Ve)*determinant(to_Matrix(Ue*transpose(W1)*transpose(Ve)));
+    std::cout<<"R is: \n" << R << std::endl;
+
 
     // TODO: Reconstruct 3D points. The main task is
     //      - triangulate a pair of image points (i.e., compute the 3D coordinates for each corresponding point pair)
 
-//    for (int i = 0; i < points_0.size(); i++){
-//        points_3d.push_back(triangulatenpoints(points_0[i], points_1[i], K, R, t));
-//    }
+    for (int i = 0; i < points_0.size(); i++){
+        points_3d.push_back(triangulatenpoints(points_0[i], points_1[i], K, R, t));
+    }
     // TODO: Don't forget to
     //          - write your recovered 3D points into 'points_3d' (the viewer can visualize the 3D points for you);
     //          - write the recovered relative pose into R and t (the view will be updated as seen from the 2nd camera,
